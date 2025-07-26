@@ -6,19 +6,20 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.activity.viewModels
 import androidx.navigation.NavHostController
@@ -31,7 +32,7 @@ import com.example.mvvmbasics.data.model.User
 import com.example.mvvmbasics.data.remote.RetrofitClient
 import com.example.mvvmbasics.data.repository.UserRepository
 import com.example.mvvmbasics.ui.components.*
-import com.example.mvvmbasics.ui.screens.UserDetailScreen
+import com.example.mvvmbasics.ui.screens.ModernUserDetailScreen
 import com.example.mvvmbasics.ui.theme.*
 import com.example.mvvmbasics.viewmodel.UiState
 import com.example.mvvmbasics.viewmodel.UserViewModel
@@ -50,7 +51,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    UserManagementApp(userViewModel = userViewModel)
+                    ModernUserManagementApp(userViewModel = userViewModel)
                 }
             }
         }
@@ -58,7 +59,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun UserManagementApp(
+fun ModernUserManagementApp(
     userViewModel: UserViewModel,
     navController: NavHostController = rememberNavController()
 ) {
@@ -67,7 +68,7 @@ fun UserManagementApp(
         startDestination = "user_list"
     ) {
         composable("user_list") {
-            UserListScreen(
+            ModernUserListScreen(
                 userViewModel = userViewModel,
                 onUserClick = { user ->
                     navController.navigate("user_detail/${user.id}")
@@ -79,25 +80,23 @@ fun UserManagementApp(
             val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull()
             val uiState by userViewModel.uiState.collectAsState()
             
-                            when (val currentState = uiState) {
-                    is UiState.Success -> {
-                        val user = currentState.data.find { it.id == userId }
+            when (val currentState = uiState) {
+                is UiState.Success -> {
+                    val user = currentState.data.find { it.id == userId }
                     if (user != null) {
-                        UserDetailScreen(
+                        ModernUserDetailScreen(
                             user = user,
                             onBackClick = { navController.popBackStack() }
                         )
                     } else {
-                        // Handle user not found
-                        ErrorState(
+                        ModernErrorState(
                             message = "User not found",
                             onRetry = { navController.popBackStack() }
                         )
                     }
                 }
                 else -> {
-                    // Loading or error state
-                    LoadingState()
+                    ModernLoadingState()
                 }
             }
         }
@@ -106,7 +105,7 @@ fun UserManagementApp(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserListScreen(
+fun ModernUserListScreen(
     userViewModel: UserViewModel,
     onUserClick: (User) -> Unit,
     modifier: Modifier = Modifier
@@ -127,42 +126,7 @@ fun UserListScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "Team Directory",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = when (val currentState = uiState) {
-                                is UiState.Success -> "${currentState.data.size} users"
-                                is UiState.Loading -> "Loading..."
-                                is UiState.Error -> "Error occurred"
-                                is UiState.Empty -> "No users"
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = { userViewModel.refreshUsers() }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
-            )
+            ModernTopAppBar(userViewModel = userViewModel, uiState = uiState)
         }
     ) { paddingValues ->
         Column(
@@ -170,44 +134,8 @@ fun UserListScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Header with gradient
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp)
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                GradientStart,
-                                GradientEnd
-                            )
-                        )
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.People,
-                        contentDescription = null,
-                        tint = androidx.compose.ui.graphics.Color.White,
-                        modifier = Modifier.size(40.dp)
-                    )
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    Text(
-                        text = "Discover Amazing People",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = androidx.compose.ui.graphics.Color.White,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-            
-            // Search Bar
-            SearchBar(
+            // Modern Search Bar
+            ModernSearchBar(
                 query = searchQuery,
                 onQueryChange = { userViewModel.searchUsers(it) },
                 onClear = { userViewModel.clearSearch() }
@@ -223,83 +151,160 @@ fun UserListScreen(
             ) {
                 when (uiState) {
                     is UiState.Loading -> {
-                        LoadingState()
+                        ModernLoadingState()
                     }
                     
                     is UiState.Success -> {
                         if (filteredUsers.isEmpty() && searchQuery.isNotEmpty()) {
-                            // No search results
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.padding(32.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.SearchOff,
-                                        contentDescription = "No results",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(64.dp)
-                                    )
-                                    
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                    
-                                    Text(
-                                        text = "No users found",
-                                        style = MaterialTheme.typography.headlineSmall,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                    
-                                    Text(
-                                        text = "Try searching with different keywords",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                    )
-                                }
-                            }
+                            ModernEmptySearchState()
                         } else {
-                            LazyColumn(
-                                state = listState,
-                                contentPadding = PaddingValues(bottom = 16.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                items(
-                                    items = filteredUsers,
-                                    key = { user -> user.id }
-                                ) { user ->
-                                    AnimatedVisibility(
-                                        visible = true,
-                                        enter = fadeIn(
-                                            animationSpec = tween(600)
-                                        ) + slideInVertically(
-                                            animationSpec = tween(600)
-                                        )
-                                    ) {
-                                        UserCard(
-                                            user = user,
-                                            onClick = onUserClick
-                                        )
-                                    }
-                                }
-                            }
+                            ModernUserList(
+                                users = filteredUsers,
+                                onUserClick = onUserClick,
+                                listState = listState
+                            )
                         }
                     }
                     
                     is UiState.Error -> {
-                        ErrorState(
+                        ModernErrorState(
                             message = (uiState as UiState.Error).message,
                             onRetry = { userViewModel.refreshUsers() }
                         )
                     }
                     
                     is UiState.Empty -> {
-                        EmptyState()
+                        ModernEmptyState()
                     }
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ModernTopAppBar(
+    userViewModel: UserViewModel,
+    uiState: UiState<List<User>>
+) {
+    TopAppBar(
+        title = {
+            Column {
+                Text(
+                    text = "Team Directory",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = when (val currentState = uiState) {
+                        is UiState.Success -> "${currentState.data.size} amazing people"
+                        is UiState.Loading -> "Loading..."
+                        is UiState.Error -> "Error occurred"
+                        is UiState.Empty -> "No users"
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        actions = {
+            GlassmorphismCard(
+                modifier = Modifier
+                    .size(40.dp)
+                    .padding(4.dp)
+            ) {
+                IconButton(
+                    onClick = { userViewModel.refreshUsers() },
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Refresh,
+                        contentDescription = "Refresh",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = Color.Transparent
+        )
+    )
+}
+
+@Composable
+private fun ModernUserList(
+    users: List<User>,
+    onUserClick: (User) -> Unit,
+    listState: androidx.compose.foundation.lazy.LazyListState
+) {
+    LazyColumn(
+        state = listState,
+        contentPadding = PaddingValues(bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(
+            items = users,
+            key = { user -> user.id }
+        ) { user ->
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn(
+                    animationSpec = tween(600)
+                ) + slideInVertically(
+                    animationSpec = tween(600)
+                ) + scaleIn(
+                    animationSpec = tween(600)
+                )
+            ) {
+                ModernUserCard(
+                    user = user,
+                    onClick = onUserClick
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModernEmptySearchState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        GlassmorphismCard(
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.SearchOff,
+                    contentDescription = "No results",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(80.dp)
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Text(
+                    text = "No users found",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                )
+                
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Text(
+                    text = "Try searching with different keywords or browse our amazing team members.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
