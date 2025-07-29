@@ -47,8 +47,8 @@ class UserViewModel(private val repository: UserRepository) : ViewModel() {
                     } else {
                         _uiState.value = UiState.Success(fetchedUsers)
                         filterUsers()
-                    }
-                }
+            }
+        }
             } catch (e: Exception) {
                 _uiState.value = UiState.Error(e.message ?: "Unknown error occurred")
             }

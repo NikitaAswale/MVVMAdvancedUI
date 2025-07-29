@@ -58,10 +58,14 @@ val GradientStart = Color(0xFF6366F1) // Indigo
 val GradientMiddle = Color(0xFF8B5CF6) // Violet
 val GradientEnd = Color(0xFFEC4899) // Pink
 
-// Additional Modern Gradients
+// Modern Gradients
 val GradientSunset = listOf(Color(0xFFF59E0B), Color(0xFFEC4899), Color(0xFF8B5CF6))
 val GradientOcean = listOf(Color(0xFF3B82F6), Color(0xFF14B8A6), Color(0xFF10B981))
 val GradientNeon = listOf(Color(0xFF6366F1), Color(0xFFEC4899), Color(0xFFF59E0B))
+val GradientAurora = listOf(Color(0xFF10B981), Color(0xFF3B82F6), Color(0xFF8B5CF6))
+val GradientFire = listOf(Color(0xFFF97316), Color(0xFFEC4899), Color(0xFF8B5CF6))
+val GradientMidnight = listOf(Color(0xFF1F2937), Color(0xFF374151), Color(0xFF6366F1))
+val GradientSunrise = listOf(Color(0xFFF59E0B), Color(0xFFF97316), Color(0xFFEC4899))
 
 // Glassmorphism Gradients
 val GlassGradientLight = listOf(

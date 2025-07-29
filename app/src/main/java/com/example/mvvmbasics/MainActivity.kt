@@ -63,40 +63,50 @@ fun ModernUserManagementApp(
     userViewModel: UserViewModel,
     navController: NavHostController = rememberNavController()
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = "user_list"
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        composable("user_list") {
-            ModernUserListScreen(
-                userViewModel = userViewModel,
-                onUserClick = { user ->
-                    navController.navigate("user_detail/${user.id}")
-                }
-            )
-        }
+        // Animated background
+        ModernAnimatedBackground(
+            modifier = Modifier.fillMaxSize()
+        )
         
-        composable("user_detail/{userId}") { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull()
-            val uiState by userViewModel.uiState.collectAsState()
-            
-            when (val currentState = uiState) {
-                is UiState.Success -> {
-                    val user = currentState.data.find { it.id == userId }
-                    if (user != null) {
-                        ModernUserDetailScreen(
-                            user = user,
-                            onBackClick = { navController.popBackStack() }
-                        )
-                    } else {
-                        ModernErrorState(
-                            message = "User not found",
-                            onRetry = { navController.popBackStack() }
-                        )
+        // Main content
+        NavHost(
+            navController = navController,
+            startDestination = "user_list"
+        ) {
+            composable("user_list") {
+                ModernUserListScreen(
+                    userViewModel = userViewModel,
+                    onUserClick = { user ->
+                        navController.navigate("user_detail/${user.id}")
                     }
-                }
-                else -> {
-                    ModernLoadingState()
+                )
+            }
+            
+            composable("user_detail/{userId}") { backStackEntry ->
+                val userId = backStackEntry.arguments?.getString("userId")?.toIntOrNull()
+                val uiState by userViewModel.uiState.collectAsState()
+                
+                when (val currentState = uiState) {
+                    is UiState.Success -> {
+                        val user = currentState.data.find { it.id == userId }
+                        if (user != null) {
+                            ModernUserDetailScreen(
+                                user = user,
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        } else {
+                            ModernErrorState(
+                                message = "User not found",
+                                onRetry = { navController.popBackStack() }
+                            )
+                        }
+                    }
+                    else -> {
+                        ModernLoadingState()
+                    }
                 }
             }
         }
@@ -127,54 +137,67 @@ fun ModernUserListScreen(
     Scaffold(
         topBar = {
             ModernTopAppBar(userViewModel = userViewModel, uiState = uiState)
+        },
+        floatingActionButton = {
+            // Modern Floating Action Button
+            ModernFloatingActionButton(
+                onClick = { userViewModel.refreshUsers() },
+                icon = Icons.Default.Refresh,
+                contentDescription = "Refresh users",
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
         }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Modern Search Bar
-            ModernSearchBar(
-                query = searchQuery,
-                onQueryChange = { userViewModel.searchUsers(it) },
-                onClear = { userViewModel.clearSearch() }
-            )
-            
-            // Content
-            SwipeRefresh(
-                state = rememberSwipeRefreshState(isRefreshing),
-                onRefresh = {
-                    isRefreshing = true
-                    userViewModel.refreshUsers()
-                }
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                when (uiState) {
-                    is UiState.Loading -> {
-                        ModernLoadingState()
+                // Modern Search Bar
+                ModernSearchBar(
+                    query = searchQuery,
+                    onQueryChange = { userViewModel.searchUsers(it) },
+                    onClear = { userViewModel.clearSearch() }
+                )
+                
+                // Content
+                SwipeRefresh(
+                    state = rememberSwipeRefreshState(isRefreshing),
+                    onRefresh = {
+                        isRefreshing = true
+                        userViewModel.refreshUsers()
                     }
-                    
-                    is UiState.Success -> {
-                        if (filteredUsers.isEmpty() && searchQuery.isNotEmpty()) {
-                            ModernEmptySearchState()
-                        } else {
-                            ModernUserList(
-                                users = filteredUsers,
-                                onUserClick = onUserClick,
-                                listState = listState
+                ) {
+                    when (uiState) {
+                        is UiState.Loading -> {
+                            ModernLoadingState()
+                        }
+                        
+                        is UiState.Success -> {
+                            if (filteredUsers.isEmpty() && searchQuery.isNotEmpty()) {
+                                ModernEmptySearchState()
+                            } else {
+                                ModernUserList(
+                                    users = filteredUsers,
+                                    onUserClick = onUserClick,
+                                    listState = listState
+                                )
+                            }
+                        }
+                        
+                        is UiState.Error -> {
+                            ModernErrorState(
+                                message = (uiState as UiState.Error).message,
+                                onRetry = { userViewModel.refreshUsers() }
                             )
                         }
-                    }
-                    
-                    is UiState.Error -> {
-                        ModernErrorState(
-                            message = (uiState as UiState.Error).message,
-                            onRetry = { userViewModel.refreshUsers() }
-                        )
-                    }
-                    
-                    is UiState.Empty -> {
-                        ModernEmptyState()
+                        
+                        is UiState.Empty -> {
+                            ModernEmptyState()
+                        }
                     }
                 }
             }
@@ -224,8 +247,8 @@ private fun ModernTopAppBar(
                         contentDescription = "Refresh",
                         tint = MaterialTheme.colorScheme.primary
                     )
-                }
-            }
+    }
+}
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color.Transparent
