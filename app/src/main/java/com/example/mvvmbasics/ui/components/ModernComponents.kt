@@ -89,7 +89,70 @@ fun NeumorphismCard(
     }
 }
 
-// Modern Floating Search Bar
+// Modern Floating Action Button with Glassmorphism
+@Composable
+fun ModernFloatingActionButton(
+    onClick: () -> Unit,
+    icon: ImageVector,
+    contentDescription: String,
+    modifier: Modifier = Modifier
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    
+    val animatedScale by animateFloatAsState(
+        targetValue = if (isPressed) 0.9f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
+    )
+    
+    val animatedElevation by animateDpAsState(
+        targetValue = if (isPressed) 4.dp else 12.dp,
+        animationSpec = tween(durationMillis = 200)
+    )
+    
+    val infiniteTransition = rememberInfiniteTransition(label = "fab_pulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulse"
+    )
+    
+    Box(
+        modifier = modifier
+            .scale(animatedScale * pulseScale)
+            .shadow(
+                elevation = animatedElevation,
+                shape = CircleShape,
+                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+            )
+    ) {
+        GlassmorphismCard(
+            modifier = Modifier
+                .size(64.dp)
+                .clickable { onClick() }
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = contentDescription,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+    }
+}
+
+// Enhanced Modern Search Bar with better animations
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModernSearchBar(
@@ -100,10 +163,30 @@ fun ModernSearchBar(
 ) {
     var isFocused by remember { mutableStateOf(false) }
     
+    val animatedBorderColor by animateColorAsState(
+        targetValue = if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent,
+        animationSpec = tween(durationMillis = 300)
+    )
+    
+    val animatedIconScale by animateFloatAsState(
+        targetValue = if (isFocused) 1.2f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
+    )
+    
     GlassmorphismCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp)
+            .border(
+                width = 2.dp,
+                brush = Brush.horizontalGradient(
+                    colors = listOf(animatedBorderColor, Color.Transparent)
+                ),
+                shape = RoundedCornerShape(24.dp)
+            )
     ) {
         Row(
             modifier = Modifier
@@ -111,22 +194,25 @@ fun ModernSearchBar(
                 .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Animated search icon
-            val iconScale by animateFloatAsState(
-                targetValue = if (isFocused) 1.2f else 1f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
-                )
+            // Animated search icon with pulse effect
+            val infiniteTransition = rememberInfiniteTransition(label = "search_pulse")
+            val pulseAlpha by infiniteTransition.animateFloat(
+                initialValue = 0.7f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(1500, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "pulse_alpha"
             )
             
             Icon(
                 imageVector = Icons.Default.Search,
                 contentDescription = "Search",
-                tint = MaterialTheme.colorScheme.primary,
+                tint = MaterialTheme.colorScheme.primary.copy(alpha = pulseAlpha),
                 modifier = Modifier
                     .size(24.dp)
-                    .scale(iconScale)
+                    .scale(animatedIconScale)
             )
             
             Spacer(modifier = Modifier.width(16.dp))
@@ -181,7 +267,50 @@ fun ModernSearchBar(
     }
 }
 
-// Modern User Card with Glassmorphism
+// Modern Animated Status Indicator
+@Composable
+fun ModernStatusIndicator(
+    isOnline: Boolean = true,
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "status_pulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = if (isOnline) 1.3f else 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulse_scale"
+    )
+    
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = if (isOnline) 1f else 0.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulse_alpha"
+    )
+    
+    Box(
+        modifier = modifier
+            .size(12.dp)
+            .scale(pulseScale)
+            .background(
+                color = if (isOnline) AccentGreen else MaterialTheme.colorScheme.onSurfaceVariant,
+                shape = CircleShape
+            )
+            .border(
+                width = 2.dp,
+                color = if (isOnline) AccentGreen.copy(alpha = pulseAlpha) else Color.Transparent,
+                shape = CircleShape
+            )
+    )
+}
+
+// Enhanced Modern User Card with status indicator and better animations
 @Composable
 fun ModernUserCard(
     user: User,
@@ -189,9 +318,10 @@ fun ModernUserCard(
     modifier: Modifier = Modifier
 ) {
     var isPressed by remember { mutableStateOf(false) }
+    var isHovered by remember { mutableStateOf(false) }
     
     val animatedScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
+        targetValue = if (isPressed) 0.95f else if (isHovered) 1.02f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessLow
@@ -199,8 +329,17 @@ fun ModernUserCard(
     )
     
     val animatedElevation by animateDpAsState(
-        targetValue = if (isPressed) 4.dp else 12.dp,
+        targetValue = when {
+            isPressed -> 4.dp
+            isHovered -> 16.dp
+            else -> 12.dp
+        },
         animationSpec = tween(durationMillis = 200)
+    )
+    
+    val animatedRotation by animateFloatAsState(
+        targetValue = if (isHovered) 2f else 0f,
+        animationSpec = tween(durationMillis = 300)
     )
     
     GlassmorphismCard(
@@ -208,6 +347,7 @@ fun ModernUserCard(
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp)
             .scale(animatedScale)
+            .rotate(animatedRotation)
             .shadow(
                 elevation = animatedElevation,
                 shape = RoundedCornerShape(24.dp),
@@ -223,7 +363,7 @@ fun ModernUserCard(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Modern Avatar with gradient border
+                // Modern Avatar with gradient border and status indicator
                 Box(
                     modifier = Modifier
                         .size(64.dp)
@@ -244,6 +384,18 @@ fun ModernUserCard(
                         name = user.name,
                         modifier = Modifier.fillMaxSize()
                     )
+                    
+                    // Status indicator positioned at bottom-right
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .offset(x = 2.dp, y = 2.dp)
+                    ) {
+                        ModernStatusIndicator(
+                            isOnline = (user.id % 3 == 0), // Simulate online status
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
                 }
                 
                 Spacer(modifier = Modifier.width(20.dp))
@@ -277,7 +429,7 @@ fun ModernUserCard(
                 
                 // Modern chevron with animation
                 val chevronRotation by animateFloatAsState(
-                    targetValue = if (isPressed) 90f else 0f,
+                    targetValue = if (isHovered) 90f else 0f,
                     animationSpec = tween(durationMillis = 200)
                 )
                 
@@ -392,7 +544,56 @@ fun ModernInfoChip(
     }
 }
 
-// Modern Loading State with animated gradient
+// Modern Animated Progress Indicator
+@Composable
+fun ModernProgressIndicator(
+    progress: Float,
+    modifier: Modifier = Modifier
+) {
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = tween(durationMillis = 1000, easing = LinearEasing),
+        label = "progress"
+    )
+    
+    val infiniteTransition = rememberInfiniteTransition(label = "progress_glow")
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 0.8f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glow_alpha"
+    )
+    
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(8.dp)
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(4.dp)
+            )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(animatedProgress)
+                .height(8.dp)
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = glowAlpha),
+                            MaterialTheme.colorScheme.primary
+                        )
+                    ),
+                    shape = RoundedCornerShape(4.dp)
+                )
+        )
+    }
+}
+
+// Enhanced Modern Loading State with animated gradient and progress
 @Composable
 fun ModernLoadingState(
     modifier: Modifier = Modifier
@@ -408,6 +609,16 @@ fun ModernLoadingState(
         label = "gradient_rotation"
     )
     
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 1.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulse_scale"
+    )
+    
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -415,10 +626,11 @@ fun ModernLoadingState(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Animated gradient circle
+            // Animated gradient circle with pulse effect
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(100.dp)
+                    .scale(pulseScale)
                     .background(
                         brush = Brush.sweepGradient(
                             colors = GradientSunset,
@@ -427,7 +639,7 @@ fun ModernLoadingState(
                         shape = CircleShape
                     )
                     .rotate(gradientRotation)
-                    .padding(4.dp)
+                    .padding(6.dp)
                     .background(
                         color = MaterialTheme.colorScheme.surface,
                         shape = CircleShape
@@ -435,29 +647,48 @@ fun ModernLoadingState(
                 contentAlignment = Alignment.Center
             ) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(60.dp),
+                    modifier = Modifier.size(80.dp),
                     color = MaterialTheme.colorScheme.primary,
-                    strokeWidth = 4.dp
+                    strokeWidth = 6.dp
                 )
             }
             
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Animated loading text
+            val textAlpha by infiniteTransition.animateFloat(
+                initialValue = 0.5f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(1500, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "text_alpha"
+            )
             
             Text(
                 text = "Loading amazing people...",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = textAlpha),
                 textAlign = TextAlign.Center
             )
             
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
             Text(
                 text = "Please wait while we fetch the latest data",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = textAlpha),
                 textAlign = TextAlign.Center
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Progress indicator
+            ModernProgressIndicator(
+                progress = 0.7f, // Simulate progress
+                modifier = Modifier.padding(horizontal = 40.dp)
             )
         }
     }
@@ -593,5 +824,111 @@ fun ModernEmptyState(
                 )
             }
         }
+    }
+} 
+
+// Modern Animated Background with Floating Particles
+@Composable
+fun ModernAnimatedBackground(
+    modifier: Modifier = Modifier
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "background")
+    
+    // Create multiple floating particles
+    repeat(8) { index ->
+        val particleOffset by infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = 100f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(
+                    durationMillis = 3000 + index * 500,
+                    easing = LinearEasing
+                ),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "particle_$index"
+        )
+        
+        val particleScale by infiniteTransition.animateFloat(
+            initialValue = 0.5f,
+            targetValue = 1.5f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(
+                    durationMillis = 2000 + index * 300,
+                    easing = LinearEasing
+                ),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "scale_$index"
+        )
+        
+        val particleAlpha by infiniteTransition.animateFloat(
+            initialValue = 0.1f,
+            targetValue = 0.3f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(
+                    durationMillis = 2500 + index * 400,
+                    easing = LinearEasing
+                ),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "alpha_$index"
+        )
+        
+        Box(
+            modifier = modifier
+                .offset(
+                    x = (50 + index * 40).dp,
+                    y = (100 + index * 60 + particleOffset).dp
+                )
+                .size((20 + index * 5).dp)
+                .scale(particleScale)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = particleAlpha),
+                            Color.Transparent
+                        )
+                    ),
+                    shape = CircleShape
+                )
+                .blur(radius = 2.dp)
+        )
+    }
+}
+
+// Modern Card with Hover Effect
+@Composable
+fun ModernHoverCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    var isHovered by remember { mutableStateOf(false) }
+    
+    val animatedScale by animateFloatAsState(
+        targetValue = if (isHovered) 1.05f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        )
+    )
+    
+    val animatedElevation by animateDpAsState(
+        targetValue = if (isHovered) 16.dp else 8.dp,
+        animationSpec = tween(durationMillis = 200)
+    )
+    
+    GlassmorphismCard(
+        modifier = modifier
+            .scale(animatedScale)
+            .shadow(
+                elevation = animatedElevation,
+                shape = RoundedCornerShape(20.dp),
+                spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+            )
+            .clickable { onClick() }
+    ) {
+        content()
     }
 } 
